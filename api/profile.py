@@ -1,6 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from database.models import User
+from database.models import User, UserRefresh
 from database.schemas import UserOutSchema, UserUpdateSchema, UserRefreshSchema
 from fastapi import status, HTTPException, APIRouter, Depends
 from database.connection import get_db
@@ -37,9 +37,9 @@ async def put(
     await db.refresh(scal)
     return scal
 
-@router.delete('/{user_id}/', response_model=dict, tags=['Profile'])
+@router.delete('/', response_model=dict, tags=['Profile'])
 async def delete(schema: UserRefreshSchema, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.id==schema.refresh_token))
+    result = await db.execute(select(UserRefresh).where(UserRefresh.token==schema.refresh_token))
     scal = result.scalar_one_or_none()
 
     if not scal:

@@ -31,7 +31,7 @@ class UserRefresh(Base):
 
     id: Mapped[int] = mapped_column(autoincrement=True, primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
-    token: Mapped[str] = mapped_column()
+    token: Mapped[str] = mapped_column(unique=True)
 
     refresh_user: Mapped[User] = relationship(back_populates='user_refresh')
 
