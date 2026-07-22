@@ -127,13 +127,16 @@ async def logout(schema: UserRefreshSchema, db: AsyncSession = Depends(get_db)):
     }
 
 @router.post('/access', response_model=dict, tags=['Auth'])
-async def access(refresh_token: str, db: AsyncSession = Depends(get_db)):
-    query = select(UserRefresh).where(UserRefresh.token==refresh_token)
+async def access(schema: UserRefreshSchema, db: AsyncSession = Depends(get_db)):
+    query = select(UserRefresh).where(UserRefresh.token == schema.refresh_token)
     result = await db.execute(query)
     scal = result.scalar_one_or_none()
 
     if not scal:
-        raise HTTPException(detail='Invalid token', status_code=status.HTTP_400_BAD_REQUEST)
+        raise HTTPException(
+            detail='Invalid or expired refresh token',
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
 
     access_token = create_access_token(scal.user_id)
     return {
