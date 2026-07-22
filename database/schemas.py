@@ -16,8 +16,8 @@ class UserLogoutSchema(BaseModel):
 
 class UserUpdateSchema(BaseModel):
     username: str = Field(default=None, min_length=3, max_length=30)
-    email: Optional[EmailStr] = None
-    phone: Optional[str] = None
+    email: Optional[EmailStr] = Field(default=None)
+    phone: Optional[str] = Field(default=None)
     password: str = Field(default=None, min_length=6, max_length=100)
     status: Optional[StatusChoices] = Field(default=None)
 
