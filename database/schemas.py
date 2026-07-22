@@ -11,6 +11,9 @@ class UserLoginSchema(BaseModel):
     username: str
     password: str
 
+class LogoutSchema(BaseModel):
+    refresh_token: str
+
 class UserOutSchema(BaseModel):
     id: int
     username: str = Field(min_length=3, max_length=30)
