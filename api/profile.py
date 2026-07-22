@@ -38,12 +38,17 @@ async def put(
     return scal
 
 @router.delete('/{user_id}/', response_model=dict, tags=['Profile'])
-async def delete(user_id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(User).where(User.id==user_id))
+async def delete(schema: UserRefreshSchema, db: AsyncSession = Depends(get_db)):
+    query = (
+        select(User)
+        .join(UserRefresh, User.id == UserRefresh.user_id)
+        .where(UserRefresh.token == schema.refresh_token)
+    )
+    result = await db.execute(query)
     scal = result.scalar_one_or_none()
 
     if not scal:
-        raise HTTPException(detail=f'No user with id {user_id}', status_code=status.HTTP_404_NOT_FOUND)
+        raise HTTPException(detail='Invalid token', status_code=status.HTTP_404_NOT_FOUND)
 
     await db.delete(scal)
     await db.commit()
