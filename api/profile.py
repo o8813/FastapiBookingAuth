@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from database.models import User
-from database.schemas import UserOutSchema, UserInputSchema
+from database.schemas import UserOutSchema, UserUpdateSchema
 from fastapi import status, HTTPException, APIRouter, Depends
 from database.connection import get_db
 
@@ -20,7 +20,7 @@ async def get(user_id: int, db: AsyncSession = Depends(get_db)):
 @router.put('/{user_id}/', response_model=UserOutSchema, tags=['Profile'])
 async def put(
         user_id: int,
-        schema: UserInputSchema,
+        schema: UserUpdateSchema,
         db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(User).where(User.id==user_id))
