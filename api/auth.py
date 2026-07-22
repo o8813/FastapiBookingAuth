@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from database.connection import get_db
 from database.models import User, UserRefresh
-from database.schemas import UserInputSchema, UserLoginSchema, UserLogoutSchema
+from database.schemas import UserInputSchema, UserLoginSchema, UserRefreshSchema
 from fastapi import HTTPException, APIRouter, status, Depends
 from passlib.context import CryptContext
 from config import config
@@ -112,7 +112,7 @@ async def login(schema: UserLoginSchema, db: AsyncSession = Depends(get_db)):
     }
 
 @router.post('/logout', response_model=dict, tags=['Auth'])
-async def logout(schema: UserLogoutSchema, db: AsyncSession = Depends(get_db)):
+async def logout(schema: UserRefreshSchema, db: AsyncSession = Depends(get_db)):
     query = select(UserRefresh).where(UserRefresh.token==schema.refresh_token)
     result = await db.execute(query)
     scal = result.scalar_one_or_none()

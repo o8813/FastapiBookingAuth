@@ -11,7 +11,7 @@ class UserLoginSchema(BaseModel):
     username: str
     password: str
 
-class UserLogoutSchema(BaseModel):
+class UserRefreshSchema(BaseModel):
     refresh_token: str
 
 class UserUpdateSchema(BaseModel):
