@@ -37,7 +37,7 @@ async def put(
     await db.refresh(scal)
     return scal
 
-@router.delete('/{user_id}/', response_model=dict, tags=['Profile'])
+@router.delete('/', response_model=dict, tags=['Profile'])
 async def delete(schema: UserRefreshSchema, db: AsyncSession = Depends(get_db)):
     query = (
         select(User)
