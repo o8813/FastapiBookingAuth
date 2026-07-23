@@ -7,7 +7,7 @@ from passlib.context import CryptContext
 from config import config
 from jose import jwt
 from datetime import datetime, timezone, timedelta
-from sqlalchemy import select
+from sqlalchemy import select, delete
 import uuid
 
 router = APIRouter(prefix='/auth', tags=['Auth'])
@@ -119,7 +119,7 @@ async def logout(schema: UserRefreshSchema, db: AsyncSession = Depends(get_db)):
     if not scal:
         raise HTTPException(detail='Invalid token', status_code=status.HTTP_400_BAD_REQUEST)
 
-    await db.delete(scal)
+    await db.execute(delete(UserRefresh).where(UserRefresh.user_id==scal.user_id))
     await db.commit()
     return {
         'detail': 'Successfully logged out'
