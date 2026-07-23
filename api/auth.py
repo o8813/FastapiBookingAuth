@@ -25,27 +25,26 @@ def created_token(data: dict, expires_delta: timedelta) -> str:
     expiration_time = datetime.now(timezone.utc) + expires_delta
     to_encode.update({
         "exp": expiration_time,
-        "jti": str(uuid.uuid4()), # Уникальный ID токена
+        "jti": str(uuid.uuid4()),
     })
     return jwt.encode(to_encode, config.SECRET_KEY, algorithm=config.ALGORITHM)
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user: User) -> str:
     return created_token(
         {
-            'sub': str(user_id),
-            'id': user_id,            # Ожидается приемником ("Token has no id")
-            'user_id': user_id,       # Запасной вариант для дефолтного USER_ID_CLAIM
-            'token_type': 'access',   # Ожидается SimpleJWT вместо 'type'
+            'sub': str(user.id),
+            'user_id': user.id,
+            'username': user.username,
+            'status': user.status,
+            'token_type': 'access',
         },
         expires_delta=timedelta(minutes=config.ACCESS_TOKEN_LIFETIME)
     )
 
-def create_refresh_token(user_id: int) -> str:
+def create_refresh_token(user: User) -> str:
     return created_token(
         {
-            'sub': str(user_id),
-            'id': user_id,
-            'user_id': user_id,
+            'sub': str(user.id),
             'token_type': 'refresh',
         },
         expires_delta=timedelta(days=config.REFRESH_TOKEN_LIFETIME)
@@ -74,8 +73,8 @@ async def register(schema: UserInputSchema, db: AsyncSession = Depends(get_db)):
     await db.commit()
     await db.refresh(user)
 
-    access_token = create_access_token(user.id)
-    refresh_token = create_refresh_token(user.id)
+    access_token = create_access_token(user)
+    refresh_token = create_refresh_token(user)
     refresh = UserRefresh(user_id=user.id, token=refresh_token)
     db.add(refresh)
     await db.commit()
@@ -95,10 +94,10 @@ async def login(schema: UserLoginSchema, db: AsyncSession = Depends(get_db)):
     scal = result.scalar_one_or_none()
 
     if not scal or not verify_password(schema.password, scal.password):
-        raise HTTPException(detail='Invalid credentials', status_code=status.HTTP_400_BAD_REQUEST)
+        raise HTTPException(detail='Invalid credentials', status_code=status.HTTP_401_UNAUTHORIZED)
 
-    access_token = create_access_token(scal.id)
-    refresh_token = create_refresh_token(scal.id)
+    access_token = create_access_token(scal)
+    refresh_token = create_refresh_token(scal)
     refresh = UserRefresh(user_id=scal.id, token=refresh_token)
 
     db.add(refresh)
@@ -138,7 +137,11 @@ async def access(schema: UserRefreshSchema, db: AsyncSession = Depends(get_db)):
             status_code=status.HTTP_400_BAD_REQUEST
         )
 
-    access_token = create_access_token(scal.user_id)
+    user_query = select(User).where(User.id == scal.user_id)
+    user_res = await db.execute(user_query)
+    user = user_res.scalar_one_or_none()
+
+    access_token = create_access_token(user)
     return {
         'access': access_token,
         'token-type': 'Bearer'
