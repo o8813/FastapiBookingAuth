@@ -1,5 +1,4 @@
 from typing import Annotated
-
 from config import config
 from database.connection import get_db
 from database.models import User, UserRefresh
